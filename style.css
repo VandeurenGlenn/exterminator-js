@@ -92,7 +92,9 @@ canvas {
   grid-column: 1;
   grid-row: 1 / -1;
   width: 100%;
-  height: calc(100vh - var(--hudH) - var(--metersH) - var(--layoutGaps));
+  height: auto;
+  max-height: calc(100vh - var(--hudH) - var(--metersH) - var(--layoutGaps));
+  aspect-ratio: 16 / 9;
   border-radius: 12px;
   border: 1px solid #1f2836;
   background: #1a2030;
