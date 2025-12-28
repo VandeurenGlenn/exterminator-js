@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StapleGun Exterminator TD</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="hud">
+      <div class="brand">
+        <svg
+          class="logo"
+          viewBox="0 0 60 60"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <!-- ION Studios Building Logo -->
+          <defs>
+            <linearGradient
+              id="buildingGrad"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" style="stop-color: #ff8c42; stop-opacity: 1" />
+              <stop
+                offset="100%"
+                style="stop-color: #f5bf5a; stop-opacity: 1"
+              />
+            </linearGradient>
+          </defs>
+
+          <!-- Ion symbol: nucleus + orbits -->
+          <g transform="translate(0,-4)">
+            <!-- Nucleus -->
+            <circle
+              cx="30"
+              cy="28"
+              r="5"
+              fill="#1a1f2e"
+              stroke="url(#buildingGrad)"
+              stroke-width="1.2"
+            />
+
+            <!-- Orbits -->
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="16"
+              ry="7"
+              fill="none"
+              stroke="url(#buildingGrad)"
+              stroke-width="1.2"
+            />
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="16"
+              ry="7"
+              fill="none"
+              stroke="#2dd4bf"
+              stroke-width="1"
+              transform="rotate(55 30 28)"
+              opacity="0.9"
+            />
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="16"
+              ry="7"
+              fill="none"
+              stroke="#f5bf5a"
+              stroke-width="1"
+              transform="rotate(-55 30 28)"
+              opacity="0.9"
+            />
+
+            <!-- Electrons -->
+            <circle cx="14" cy="28" r="1.6" fill="#2dd4bf" />
+            <circle cx="46" cy="28" r="1.6" fill="#2dd4bf" />
+            <circle cx="30" cy="21" r="1.6" fill="#ff8c42" />
+            <circle cx="30" cy="35" r="1.6" fill="#ff8c42" />
+          </g>
+
+          <!-- Label -->
+          <text
+            x="30"
+            y="52"
+            font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
+            font-size="7"
+            font-weight="700"
+            fill="#2dd4bf"
+            text-anchor="middle"
+            letter-spacing="1"
+          >
+            STUDIOS
+          </text>
+        </svg>
+        <div>
+          <p class="eyebrow">ION Studios</p>
+          <h1>Exterminator TD</h1>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span>Wave</span><strong id="wave">1</strong></div>
+        <div class="stat"><span>Scrap</span><strong id="scrap">0</strong></div>
+        <div class="stat"><span>Base HP</span><strong id="hp">0</strong></div>
+      </div>
+      <div class="controls">
+        <div id="state" class="pill pill-idle">Idle</div>
+        <div id="mode" class="pill">Turret</div>
+        <button id="wall-mode" class="ghost">Wall Mode</button>
+        <button id="start">Start Run</button>
+        <button id="restart">Restart</button>
+      </div>
+    </div>
+
+    <div class="meters">
+      <div class="meter">
+        <div class="meter-label">Base Integrity</div>
+        <div class="meter-bar">
+          <div id="hp-bar" class="meter-fill"></div>
+        </div>
+      </div>
+      <div class="meter">
+        <div class="meter-label">Wave Progress</div>
+        <div class="meter-bar">
+          <div id="wave-bar" class="meter-fill alt"></div>
+        </div>
+      </div>
+    </div>
+
+    <main>
+      <canvas id="game" width="960" height="540"></canvas>
+      <div class="sell-strip" aria-label="Sell Action">
+        <button
+          id="select-sell"
+          class="build-btn"
+          data-mode="sell"
+          title="Sell (refund 60%) — shortcut 5"
+        >
+          <svg
+            class="build-icon"
+            viewBox="0 0 40 40"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <rect
+              x="8"
+              y="10"
+              width="24"
+              height="18"
+              rx="3"
+              fill="#23324a"
+              stroke="#2dd4bf"
+            />
+            <path
+              d="M12 24 C18 18, 22 18, 28 24"
+              fill="none"
+              stroke="#ff8c42"
+              stroke-width="2"
+            />
+            <rect x="18" y="26" width="4" height="6" fill="#2dd4bf" />
+          </svg>
+          <span class="build-label">Sell</span>
+          <span class="build-cost">Refund</span>
+        </button>
+      </div>
+      <div class="build-bar" aria-label="Build Selection">
+        <div class="build-tabs" role="tablist">
+          <button
+            class="build-tab active"
+            data-tab="build"
+            aria-selected="true"
+          >
+            Build
+          </button>
+          <button class="build-tab" data-tab="trap" aria-selected="false">
+            Trap
+          </button>
+          <button class="build-tab" data-tab="upgrade" aria-selected="false">
+            Upgrade
+          </button>
+        </div>
+
+        <div class="build-list" data-tab-panel="build">
+          <button
+            id="select-wall"
+            class="build-btn"
+            data-mode="wall"
+            title="Place Wall ($20) — shortcut 2"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect
+                x="10"
+                y="10"
+                width="20"
+                height="20"
+                rx="3"
+                fill="#5d4e37"
+                stroke="#4a3f2e"
+              />
+              <rect x="10" y="10" width="20" height="4" fill="#8b7355" />
+              <rect
+                x="26"
+                y="10"
+                width="4"
+                height="20"
+                fill="rgba(0,0,0,0.25)"
+              />
+            </svg>
+            <span class="build-label">Wall</span>
+            <span class="build-cost">$20</span>
+          </button>
+
+          <button
+            id="select-turret"
+            class="build-btn active"
+            data-mode="turret"
+            title="Place Turret ($50) — shortcut 1"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect
+                x="13"
+                y="20"
+                width="14"
+                height="14"
+                rx="3"
+                fill="#ff8c42"
+              />
+              <rect x="18" y="10" width="4" height="9" rx="1" fill="#555" />
+              <rect x="17" y="16" width="6" height="3" fill="#c0c0c0" />
+            </svg>
+            <span class="build-label">Turret</span>
+            <span class="build-cost">$50</span>
+          </button>
+        </div>
+
+        <div class="build-list" data-tab-panel="trap" hidden>
+          <button
+            id="select-trap"
+            class="build-btn"
+            data-mode="trap"
+            title="Place Trap ($30) — shortcut 3"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle
+                cx="20"
+                cy="20"
+                r="12"
+                fill="#23324a"
+                stroke="#2dd4bf"
+                stroke-width="2"
+              />
+              <circle cx="20" cy="20" r="4" fill="#2dd4bf" />
+              <path d="M20 6 L22 10 L18 10 Z" fill="#ff8c42" />
+              <path d="M34 20 L30 22 L30 18 Z" fill="#ff8c42" />
+              <path d="M20 34 L22 30 L18 30 Z" fill="#ff8c42" />
+              <path d="M6 20 L10 22 L10 18 Z" fill="#ff8c42" />
+            </svg>
+            <span class="build-label">Trap</span>
+            <span class="build-cost">$30</span>
+          </button>
+        </div>
+
+        <div class="build-list" data-tab-panel="upgrade" hidden>
+          <button
+            id="select-upgrade"
+            class="build-btn"
+            data-mode="upgrade"
+            title="Upgrade Turret ($70) — shortcut 4"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect
+                x="10"
+                y="22"
+                width="20"
+                height="10"
+                rx="3"
+                fill="#2dd4bf"
+              />
+              <path d="M14 22 L20 10 L26 22 Z" fill="#ff8c42" />
+              <rect x="18" y="14" width="4" height="6" fill="#f5bf5a" />
+            </svg>
+            <span class="build-label">Upgrade Turret</span>
+            <span class="build-cost">$70</span>
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <div id="toast" class="toast" aria-live="polite"></div>
+
+    <div id="start-screen" class="start-screen">
+      <div class="start-screen-content">
+        <svg
+          class="start-logo"
+          viewBox="0 0 60 60"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <!-- ION Studios Building Logo -->
+          <defs>
+            <linearGradient
+              id="buildingGrad2"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" style="stop-color: #ff8c42; stop-opacity: 1" />
+              <stop
+                offset="100%"
+                style="stop-color: #f5bf5a; stop-opacity: 1"
+              />
+            </linearGradient>
+          </defs>
+
+          <!-- Ion symbol: nucleus + orbits -->
+          <g transform="translate(0,-4)">
+            <!-- Nucleus -->
+            <circle
+              cx="30"
+              cy="28"
+              r="6"
+              fill="#1a1f2e"
+              stroke="url(#buildingGrad2)"
+              stroke-width="1.4"
+            />
+
+            <!-- Orbits -->
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="18"
+              ry="8"
+              fill="none"
+              stroke="url(#buildingGrad2)"
+              stroke-width="1.2"
+            />
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="18"
+              ry="8"
+              fill="none"
+              stroke="#2dd4bf"
+              stroke-width="1"
+              transform="rotate(55 30 28)"
+              opacity="0.9"
+            />
+            <ellipse
+              cx="30"
+              cy="28"
+              rx="18"
+              ry="8"
+              fill="none"
+              stroke="#f5bf5a"
+              stroke-width="1"
+              transform="rotate(-55 30 28)"
+              opacity="0.9"
+            />
+
+            <!-- Electrons -->
+            <circle cx="12" cy="28" r="1.8" fill="#2dd4bf" />
+            <circle cx="48" cy="28" r="1.8" fill="#2dd4bf" />
+            <circle cx="30" cy="18" r="1.8" fill="#ff8c42" />
+            <circle cx="30" cy="38" r="1.8" fill="#ff8c42" />
+          </g>
+
+          <!-- Label -->
+          <text
+            x="30"
+            y="54"
+            font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif"
+            font-size="8"
+            font-weight="800"
+            fill="#2dd4bf"
+            text-anchor="middle"
+            letter-spacing="1.2"
+          >
+            STUDIOS
+          </text>
+        </svg>
+        <p class="eyebrow">ION Studios</p>
+        <h1 class="start-title">Exterminator TD</h1>
+        <p class="start-subtitle">Tower Defense</p>
+        <p class="start-description">
+          Defend your base from waves of pests using turrets and strategic
+          walls.
+        </p>
+
+        <div class="start-selectors">
+          <div class="start-selector">
+            <label>Difficulty</label>
+            <div class="selector-options">
+              <button class="selector-btn active" data-difficulty="easy">
+                Easy
+              </button>
+              <button class="selector-btn" data-difficulty="normal">
+                Normal
+              </button>
+              <button class="selector-btn" data-difficulty="hard">Hard</button>
+            </div>
+          </div>
+
+          <div class="start-selector">
+            <label>Mission</label>
+            <div class="selector-options">
+              <button class="selector-btn mission-btn active" data-mission="1">
+                <span class="mission-number">01</span>
+                <span class="mission-name">First Contact</span>
+              </button>
+              <button class="selector-btn mission-btn" data-mission="2">
+                <span class="mission-number">02</span>
+                <span class="mission-name">Swarm Rising</span>
+              </button>
+              <button class="selector-btn mission-btn" data-mission="3">
+                <span class="mission-number">03</span>
+                <span class="mission-name">Infestation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button id="begin-game" class="start-btn">Begin Mission</button>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
