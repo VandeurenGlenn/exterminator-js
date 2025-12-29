@@ -224,7 +224,7 @@
             id="select-wall"
             class="build-btn"
             data-mode="wall"
-            title="Place Wall ($20) — shortcut 2"
+            title="Place Wall ($10) — shortcut 2"
           >
             <svg
               class="build-icon"
@@ -251,7 +251,7 @@
               />
             </svg>
             <span class="build-label">Wall</span>
-            <span class="build-cost">$20</span>
+            <span class="build-cost">$10</span>
           </button>
 
           <button
@@ -280,6 +280,41 @@
             <span class="build-label">Turret</span>
             <span class="build-cost">$50</span>
           </button>
+
+          <button
+            id="select-sniper"
+            class="build-btn"
+            data-mode="sniper"
+            title="Place Sniper ($120) — shortcut 6"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <circle
+                cx="20"
+                cy="20"
+                r="12"
+                fill="#1f2a3a"
+                stroke="#2dd4bf"
+                stroke-width="2"
+              />
+              <line
+                x1="8"
+                y1="20"
+                x2="32"
+                y2="20"
+                stroke="#ff8c42"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="28" cy="20" r="3" fill="#f5bf5a" />
+            </svg>
+            <span class="build-label">Sniper</span>
+            <span class="build-cost">$120</span>
+          </button>
         </div>
 
         <div class="build-list" data-tab-panel="trap" hidden>
@@ -287,7 +322,7 @@
             id="select-trap"
             class="build-btn"
             data-mode="trap"
-            title="Place Trap ($30) — shortcut 3"
+            title="Place Trap ($40) — shortcut 3"
           >
             <svg
               class="build-icon"
@@ -310,7 +345,7 @@
               <path d="M6 20 L10 22 L10 18 Z" fill="#ff8c42" />
             </svg>
             <span class="build-label">Trap</span>
-            <span class="build-cost">$30</span>
+            <span class="build-cost">$40</span>
           </button>
         </div>
 
@@ -318,8 +353,8 @@
           <button
             id="select-upgrade"
             class="build-btn"
-            data-mode="upgrade"
-            title="Upgrade Turret ($70) — shortcut 4"
+            data-mode="upgrade-damage"
+            title="Damage Upgrade ($85) — shortcut 4"
           >
             <svg
               class="build-icon"
@@ -338,8 +373,59 @@
               <path d="M14 22 L20 10 L26 22 Z" fill="#ff8c42" />
               <rect x="18" y="14" width="4" height="6" fill="#f5bf5a" />
             </svg>
-            <span class="build-label">Upgrade Turret</span>
-            <span class="build-cost">$70</span>
+            <span class="build-label">Upgrade Damage</span>
+            <span class="build-cost">$85</span>
+          </button>
+
+          <button
+            id="select-upgrade-speed"
+            class="build-btn"
+            data-mode="upgrade-speed"
+            title="Speed Upgrade ($75) — shortcut 7"
+          >
+            <svg
+              class="build-icon"
+              viewBox="0 0 40 40"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <rect
+                x="8"
+                y="22"
+                width="24"
+                height="10"
+                rx="3"
+                fill="#23324a"
+                stroke="#2dd4bf"
+              />
+              <path
+                d="M12 26 Q20 16 28 26"
+                fill="none"
+                stroke="#ff8c42"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <line
+                x1="14"
+                y1="26"
+                x2="18"
+                y2="18"
+                stroke="#f5bf5a"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+              <line
+                x1="22"
+                y1="26"
+                x2="26"
+                y2="18"
+                stroke="#f5bf5a"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+            <span class="build-label">Speed</span>
+            <span class="build-cost">$75</span>
           </button>
         </div>
       </div>

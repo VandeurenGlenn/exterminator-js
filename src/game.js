@@ -1,14 +1,16 @@
 import { Enemy } from "./enemy.js";
-import { Bullet, Tower } from "./weapon.js";
+import { Bullet, Tower, SniperTower } from "./weapon.js";
 import { audio } from "./audio.js";
 
 const CONFIG = {
   width: 960,
   height: 540,
-  towerCost: 60,
+  towerCost: 50,
+  sniperTowerCost: 120,
   wallCost: 10,
   trapCost: 40,
-  upgradeCost: 85,
+  upgradeDamageCost: 85,
+  upgradeSpeedCost: 75,
   refundRate: 0.6,
   baseHP: 20,
   startingScrap: 90,
@@ -16,6 +18,16 @@ const CONFIG = {
   towerRange: 140,
   towerFireRate: 0.55,
   towerDamage: 18,
+  towerDamageStep: 8,
+  towerFireRateStep: 0.88,
+  towerMinFireRate: 0.22,
+  sniperRange: 260,
+  sniperFireRate: 1.8,
+  sniperDamage: 110,
+  sniperBulletSpeed: 640,
+  sniperDamageStep: 26,
+  sniperFireRateStep: 0.92,
+  sniperMinFireRate: 0.7,
   waveSpawnInterval: 0.75,
   enemyBaseHP: 20,
   enemyBaseSpeed: 65,
@@ -247,11 +259,12 @@ export class Game {
     };
   }
 
-  placeTower(pos) {
+  placeTower(pos, type = "standard") {
     if (this.state === "over") return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
-    if (this.scrap < CONFIG.towerCost)
-      return { ok: false, reason: "Need more scrap" };
+    const isSniper = type === "sniper";
+    const cost = isSniper ? CONFIG.sniperTowerCost : CONFIG.towerCost;
+    if (this.scrap < cost) return { ok: false, reason: "Need more scrap" };
     const cell = this.cellFromPoint(pos);
     const key = `${cell.cx},${cell.cy}`;
     const snapPos = this.pointFromCell(cell);
@@ -276,8 +289,34 @@ export class Game {
     }
 
     this.paths = newPaths;
-    this.scrap -= CONFIG.towerCost;
-    this.towers.push(new Tower(snapPos));
+    this.scrap -= cost;
+    if (isSniper) {
+      this.towers.push(
+        new SniperTower(snapPos, {
+          towerRange: CONFIG.sniperRange,
+          towerFireRate: CONFIG.sniperFireRate,
+          towerDamage: CONFIG.sniperDamage,
+          towerDamageStep: CONFIG.sniperDamageStep,
+          towerFireRateStep: CONFIG.sniperFireRateStep,
+          towerMinFireRate: CONFIG.sniperMinFireRate,
+          bulletSpeed: CONFIG.sniperBulletSpeed,
+          baseCost: cost,
+        })
+      );
+    } else {
+      this.towers.push(
+        new Tower(snapPos, {
+          towerRange: CONFIG.towerRange,
+          towerFireRate: CONFIG.towerFireRate,
+          towerDamage: CONFIG.towerDamage,
+          towerDamageStep: CONFIG.towerDamageStep,
+          towerFireRateStep: CONFIG.towerFireRateStep,
+          towerMinFireRate: CONFIG.towerMinFireRate,
+          bulletSpeed: CONFIG.bulletSpeed,
+          baseCost: cost,
+        })
+      );
+    }
     audio.playBuild();
 
     // Recompute paths for crawling enemies
@@ -383,14 +422,37 @@ export class Game {
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (!tower) return { ok: false, reason: "No tower here" };
-    if (this.scrap < CONFIG.upgradeCost)
+    return this.upgradeTower(tower, "damage");
+  }
+
+  upgradeTower(tower, kind) {
+    if (!tower) return { ok: false, reason: "No tower here" };
+    if (kind === "speed" || kind === "upgrade-speed") {
+      if (tower.speedLevel >= 3) return { ok: false, reason: "Speed maxed" };
+      if (this.scrap < CONFIG.upgradeSpeedCost)
+        return { ok: false, reason: "Need more scrap" };
+      this.scrap -= CONFIG.upgradeSpeedCost;
+      tower.speedLevel += 1;
+      tower.fireRate = Math.max(
+        tower.minFireRate,
+        tower.fireRate * tower.speedMultiplierStep
+      );
+      tower.invested += CONFIG.upgradeSpeedCost;
+      audio.playUpgrade();
+      this.ui(this);
+      this.draw();
+      return { ok: true };
+    }
+
+    // damage upgrade (default)
+    if (tower.damageLevel >= 3) return { ok: false, reason: "Damage maxed" };
+    if (this.scrap < CONFIG.upgradeDamageCost)
       return { ok: false, reason: "Need more scrap" };
-    if (tower.level >= 3) return { ok: false, reason: "Max level" };
-    tower.level += 1;
-    tower.range += 18;
-    tower.fireRate = Math.max(0.22, tower.fireRate * 0.88);
-    tower.damage += 8;
-    this.scrap -= CONFIG.upgradeCost;
+    this.scrap -= CONFIG.upgradeDamageCost;
+    tower.damageLevel += 1;
+    tower.damage += tower.damageStep;
+    tower.range += 6; // small range bump for damage upgrades
+    tower.invested += CONFIG.upgradeDamageCost;
     audio.playUpgrade();
     this.ui(this);
     this.draw();
@@ -402,9 +464,7 @@ export class Game {
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (tower) {
-      const refund = Math.round(
-        CONFIG.towerCost * tower.level * CONFIG.refundRate
-      );
+      const refund = Math.round(tower.invested * CONFIG.refundRate);
       this.scrap += refund;
       this.towers = this.towers.filter((t) => t !== tower);
       const cell = this.cellFromPoint(tower.pos);
@@ -959,12 +1019,18 @@ export class Game {
 
   drawEntities() {
     const { ctx } = this;
-    // Towers - staple gun style
+    // Towers - differentiate sniper vs standard
     for (const t of this.towers) {
       ctx.save();
       ctx.translate(t.pos.x, t.pos.y);
-      const baseColor = this.hp <= 4 ? "#ffb703" : "#ff8c42";
-      const baseSize = 22;
+      const isSniper = t instanceof SniperTower;
+      const baseColor = isSniper
+        ? "#1f2a3a"
+        : this.hp <= 4
+        ? "#ffb703"
+        : "#ff8c42";
+      const accent = isSniper ? "#2dd4bf" : "#ffd8a0";
+      const baseSize = isSniper ? 24 : 22;
       const half = baseSize / 2;
 
       // Platform shadow
@@ -976,61 +1042,95 @@ export class Game {
       // Base block
       const baseGrad = ctx.createLinearGradient(-half, -half, half, half);
       baseGrad.addColorStop(0, baseColor);
-      baseGrad.addColorStop(1, "#ffd8a0");
+      baseGrad.addColorStop(1, accent);
       ctx.fillStyle = baseGrad;
       ctx.fillRect(-half, -half, baseSize, baseSize);
       ctx.strokeStyle = "rgba(0,0,0,0.35)";
       ctx.lineWidth = 2;
       ctx.strokeRect(-half + 0.5, -half + 0.5, baseSize - 1, baseSize - 1);
 
-      // Vent lines
-      ctx.fillStyle = "rgba(0,0,0,0.22)";
-      ctx.fillRect(-half + 4, -half + 4, baseSize - 8, 3);
-      ctx.fillRect(-half + 4, -half + 10, baseSize - 8, 3);
+      // Vent lines / rails
+      ctx.fillStyle = isSniper ? "rgba(45,212,191,0.2)" : "rgba(0,0,0,0.22)";
+      ctx.fillRect(-half + 4, -half + 6, baseSize - 8, 3);
+      if (!isSniper) ctx.fillRect(-half + 4, -half + 12, baseSize - 8, 3);
 
-      // Top ring
-      ctx.fillStyle = "#111926";
+      // Top ring / chassis
+      const topRadius = isSniper ? 11 : 13;
+      ctx.fillStyle = isSniper ? "#0d141f" : "#111926";
       ctx.beginPath();
-      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.arc(0, 0, topRadius, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,0.14)";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.arc(0, 0, topRadius, 0, Math.PI * 2);
       ctx.stroke();
 
       // Barrel (rotates toward target)
       ctx.save();
       ctx.rotate((t.angle ?? -Math.PI / 2) + Math.PI / 2);
-      const barrelWidth = 8;
-      const barrelLength = 18;
-      ctx.fillStyle = "#323b4d";
-      ctx.fillRect(
-        -barrelWidth / 2,
-        -13 - barrelLength,
-        barrelWidth,
-        barrelLength
-      );
-      ctx.strokeStyle = "rgba(255,255,255,0.2)";
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(
-        -barrelWidth / 2 + 0.5,
-        -13 - barrelLength + 0.5,
-        barrelWidth - 1,
-        barrelLength - 1
-      );
-      ctx.fillStyle = "#c6d0dc";
-      ctx.fillRect(-barrelWidth / 2, -13 - barrelLength - 4, barrelWidth, 6);
-
-      // Sight highlight
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.beginPath();
-      ctx.arc(0, -8, 3, 0, Math.PI * 2);
-      ctx.fill();
+      if (isSniper) {
+        const barrelWidth = 5;
+        const barrelLength = 28;
+        ctx.fillStyle = "#2dd4bf";
+        ctx.fillRect(
+          -barrelWidth / 2,
+          -topRadius - barrelLength,
+          barrelWidth,
+          barrelLength
+        );
+        ctx.fillStyle = "#9ccdd0";
+        ctx.fillRect(
+          -barrelWidth / 2,
+          -topRadius - barrelLength - 4,
+          barrelWidth,
+          6
+        );
+        // Bipod feet hint
+        ctx.strokeStyle = "rgba(255,255,255,0.25)";
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.moveTo(-6, -topRadius + 2);
+        ctx.lineTo(-10, -topRadius + 8);
+        ctx.moveTo(6, -topRadius + 2);
+        ctx.lineTo(10, -topRadius + 8);
+        ctx.stroke();
+        // Scope dot
+        ctx.fillStyle = "#f5bf5a";
+        ctx.beginPath();
+        ctx.arc(0, -topRadius - barrelLength + 6, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        const barrelWidth = 8;
+        const barrelLength = 18;
+        ctx.fillStyle = "#323b4d";
+        ctx.fillRect(
+          -barrelWidth / 2,
+          -13 - barrelLength,
+          barrelWidth,
+          barrelLength
+        );
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(
+          -barrelWidth / 2 + 0.5,
+          -13 - barrelLength + 0.5,
+          barrelWidth - 1,
+          barrelLength - 1
+        );
+        ctx.fillStyle = "#c6d0dc";
+        ctx.fillRect(-barrelWidth / 2, -13 - barrelLength - 4, barrelWidth, 6);
+        ctx.fillStyle = "rgba(255,255,255,0.3)";
+        ctx.beginPath();
+        ctx.arc(0, -8, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
 
       // Range indicator
-      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.strokeStyle = isSniper
+        ? "rgba(45,212,191,0.08)"
+        : "rgba(255,255,255,0.06)";
       ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.arc(0, 0, t.range, 0, Math.PI * 2);
@@ -1248,17 +1348,17 @@ export class Game {
     ctx.arc(this.cursorPos.x, this.cursorPos.y, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-    ctx.setLineDash([4, 4]);
-    ctx.beginPath();
-    ctx.arc(
-      this.cursorPos.x,
-      this.cursorPos.y,
-      CONFIG.towerRange,
-      0,
-      Math.PI * 2
-    );
-    ctx.stroke();
-    ctx.setLineDash([]);
+    const showRange =
+      this.buildMode === "turret" || this.buildMode === "sniper";
+    if (showRange) {
+      const previewRange =
+        this.buildMode === "sniper" ? CONFIG.sniperRange : CONFIG.towerRange;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(this.cursorPos.x, this.cursorPos.y, previewRange, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
 
   drawGameOver() {

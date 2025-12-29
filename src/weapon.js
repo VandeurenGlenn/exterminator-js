@@ -42,6 +42,13 @@ export class Tower {
     this.damage = config.towerDamage || 18;
     this.angle = -Math.PI / 2; // Default facing up
     this.turnRate = Math.PI * 3; // Radians per second
+    this.bulletSpeed = config.bulletSpeed || 460;
+    this.damageStep = config.towerDamageStep || 8;
+    this.speedMultiplierStep = config.towerFireRateStep || 0.88;
+    this.minFireRate = config.towerMinFireRate || 0.22;
+    this.damageLevel = 1;
+    this.speedLevel = 1;
+    this.invested = config.baseCost || 0;
   }
 
   update(dt, enemies, bullets) {
@@ -60,7 +67,7 @@ export class Tower {
       };
 
       const bullet = new Bullet(spawnPos, target, {
-        bulletSpeed: 460,
+        bulletSpeed: this.bulletSpeed,
         towerDamage: this.damage,
       });
       bullets.push(bullet);
@@ -91,6 +98,22 @@ export class Tower {
     const maxStep = this.turnRate * dt;
     const step = Math.max(-maxStep, Math.min(maxStep, delta));
     this.angle = normalizeAngle(this.angle + step);
+  }
+}
+
+export class SniperTower extends Tower {
+  constructor(pos, config = {}) {
+    super(pos, {
+      towerRange: config.towerRange,
+      towerFireRate: config.towerFireRate,
+      towerDamage: config.towerDamage,
+      towerDamageStep: config.towerDamageStep,
+      towerFireRateStep: config.towerFireRateStep,
+      towerMinFireRate: config.towerMinFireRate,
+      bulletSpeed: config.bulletSpeed,
+      baseCost: config.baseCost,
+    });
+    this.turnRate = Math.PI * 2; // slightly slower turning
   }
 }
 

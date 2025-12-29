@@ -9,6 +9,9 @@ export function setupInputHandlers(game, handlers) {
       case "1":
         handlers.setBuildMode("turret");
         break;
+      case "6":
+        handlers.setBuildMode("sniper");
+        break;
       case "2":
         handlers.setBuildMode("wall");
         break;
@@ -16,7 +19,10 @@ export function setupInputHandlers(game, handlers) {
         handlers.setBuildMode("trap");
         break;
       case "4":
-        handlers.setBuildMode("upgrade");
+        handlers.setBuildMode("upgrade-damage");
+        break;
+      case "7":
+        handlers.setBuildMode("upgrade-speed");
         break;
       case "5":
         handlers.setBuildMode("sell");
@@ -43,7 +49,38 @@ export function setupInputHandlers(game, handlers) {
 }
 
 export function setupCanvasHandlers(canvas, game, handlers) {
+  let isWallDrag = false;
+  let lastWallCell = null;
+  let suppressClick = false;
+
+  const maybePlaceWall = (pos) => {
+    const cell = game.cellFromPoint(pos);
+    const key = `${cell.cx},${cell.cy}`;
+    if (key === lastWallCell) return;
+    lastWallCell = key;
+    handlers.handleCanvasClick(pos);
+  };
+
+  canvas.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
+    const mode = handlers.getCurrentMode?.();
+    const pos = canvasPoint(event, canvas);
+
+    if (mode === "wall") {
+      suppressClick = true; // avoid duplicate click after drag
+      isWallDrag = true;
+      lastWallCell = null;
+      maybePlaceWall(pos);
+    } else {
+      suppressClick = false;
+    }
+  });
+
   canvas.addEventListener("click", (event) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     const pos = canvasPoint(event, canvas);
     handlers.handleCanvasClick(pos);
   });
@@ -51,10 +88,23 @@ export function setupCanvasHandlers(canvas, game, handlers) {
   canvas.addEventListener("mousemove", (event) => {
     const pos = canvasPoint(event, canvas);
     game.cursorPos = pos;
+
+    if (isWallDrag && handlers.getCurrentMode?.() === "wall") {
+      maybePlaceWall(pos);
+    }
   });
 
   canvas.addEventListener("mouseleave", () => {
     game.cursorPos = null;
+    isWallDrag = false;
+    lastWallCell = null;
+    suppressClick = false;
+  });
+
+  canvas.addEventListener("mouseup", (event) => {
+    if (event.button !== 0) return;
+    isWallDrag = false;
+    lastWallCell = null;
   });
 }
 
@@ -72,6 +122,9 @@ export function setupBuildModeHandlers(dom, handlers) {
   dom.selectTurretBtn?.addEventListener("click", () =>
     handlers.setBuildMode("turret")
   );
+  dom.selectSniperBtn?.addEventListener("click", () =>
+    handlers.setBuildMode("sniper")
+  );
   dom.selectWallBtn?.addEventListener("click", () =>
     handlers.setBuildMode("wall")
   );
@@ -79,7 +132,13 @@ export function setupBuildModeHandlers(dom, handlers) {
     handlers.setBuildMode("trap")
   );
   dom.selectUpgradeBtn?.addEventListener("click", () =>
-    handlers.setBuildMode("upgrade")
+    handlers.setBuildMode("upgrade-damage")
+  );
+  dom.selectUpgradeDamageBtn?.addEventListener("click", () =>
+    handlers.setBuildMode("upgrade-damage")
+  );
+  dom.selectUpgradeSpeedBtn?.addEventListener("click", () =>
+    handlers.setBuildMode("upgrade-speed")
   );
   dom.selectSellBtn?.addEventListener("click", () =>
     handlers.setBuildMode("sell")

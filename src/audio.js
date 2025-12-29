@@ -145,6 +145,7 @@ class AudioManager {
   startMusic() {
     if (!this.ensureContext()) return;
     if (this.musicInterval) return;
+    const tempo = 1.15; // Slow the main loop down slightly
     const pad = [
       { f: 174.61, d: 0.8 }, // F3
       { f: 196.0, d: 0.8 }, // G3
@@ -201,57 +202,60 @@ class AudioManager {
       // Warm pad (tighter gaps)
       let tPad = now;
       for (const n of pad) {
+        const duration = n.d * tempo;
         this._tone(
           {
             from: n.f,
             to: n.f * 0.985,
-            duration: n.d,
+            duration,
             type: "sine",
             gain: 0.3,
           },
           this.musicGain,
           tPad
         );
-        tPad += n.d;
+        tPad += duration;
       }
 
       // Bass line (reduced pauses)
       let tBass = now;
       for (const n of bass) {
+        const duration = n.d * tempo;
         this._tone(
           {
             from: n.f,
             to: n.f * 0.98,
-            duration: n.d,
+            duration,
             type: "triangle",
             gain: 0.35,
           },
           this.musicGain,
           tBass
         );
-        tBass += n.d;
+        tBass += duration;
       }
 
       // Melodic line (more prominent)
       let tMel = now;
       for (const m of melody) {
+        const duration = m.d * tempo;
         this._tone(
           {
             from: m.f,
             to: m.f * 0.96,
-            duration: m.d,
+            duration,
             type: "sine",
             gain: 0.4,
           },
           this.musicGain,
           tMel
         );
-        tMel += m.d;
+        tMel += duration;
       }
     };
 
     loop();
-    this.musicInterval = setInterval(loop, 6400);
+    this.musicInterval = setInterval(loop, 6400 * tempo);
   }
 
   playWaveClear() {
@@ -324,6 +328,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2; // Slow retro loop slightly
 
     // Start retro song after fade completes
     setTimeout(() => {
@@ -359,7 +364,7 @@ class AudioManager {
         { f: 587.33, d: 0.12 }, // D5
       ];
 
-      const loopDuration = 1200; // 1.2s (bass line only)
+      const loopDuration = 1200 * tempo; // slowed
 
       const loop = () => {
         const now = this.ctx.currentTime;
@@ -367,18 +372,19 @@ class AudioManager {
         // Play bass line
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sawtooth",
               gain: 0.18,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -396,6 +402,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2; // Slow retro loop slightly
 
     // Start alternative retro song after fade completes
     setTimeout(() => {
@@ -407,7 +414,7 @@ class AudioManager {
         { f: 110.0, d: 0.2 }, // A2
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
@@ -415,18 +422,19 @@ class AudioManager {
         // Play bass line
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "triangle",
               gain: 0.22,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -444,6 +452,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2;
 
     // Start funky retro song after fade completes
     setTimeout(() => {
@@ -459,7 +468,7 @@ class AudioManager {
         { f: 174.61, d: 0.1 }, // F3
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
@@ -467,18 +476,19 @@ class AudioManager {
         // Play bass line
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "square",
               gain: 0.2,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -495,6 +505,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -507,25 +518,26 @@ class AudioManager {
         { f: 110.0, d: 0.04 }, // A2 (quick punctuation)
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
 
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sine",
               gain: 0.2,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -542,6 +554,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -555,25 +568,26 @@ class AudioManager {
         { f: 174.61, d: 0.08 }, // F3
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
 
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sawtooth",
               gain: 0.22,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -590,6 +604,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random()); // 2 or 3 waves
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -599,25 +614,26 @@ class AudioManager {
         { f: 82.41, d: 0.2 }, // E2
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
 
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "triangle",
               gain: 0.24,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -634,6 +650,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -647,24 +664,25 @@ class AudioManager {
         { f: 174.61, d: 0.1 }, // F3
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "square",
               gain: 0.21,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -681,6 +699,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -694,24 +713,25 @@ class AudioManager {
         { f: 98.0, d: 0.15 }, // G2
       ];
 
-      const loopDuration = 1200;
+      const loopDuration = 1200 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sawtooth",
               gain: 0.19,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -728,6 +748,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -739,24 +760,25 @@ class AudioManager {
         { f: 146.83, d: 0.1 }, // D3
       ];
 
-      const loopDuration = 800;
+      const loopDuration = 800 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "triangle",
               gain: 0.23,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -773,6 +795,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -788,24 +811,25 @@ class AudioManager {
         { f: 196.0, d: 0.06 }, // G3
       ];
 
-      const loopDuration = 600;
+      const loopDuration = 600 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "square",
               gain: 0.19,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -822,6 +846,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -831,24 +856,25 @@ class AudioManager {
         { f: 65.41, d: 0.25 }, // C2
       ];
 
-      const loopDuration = 1000;
+      const loopDuration = 1000 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sawtooth",
               gain: 0.25,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 
@@ -865,6 +891,7 @@ class AudioManager {
     this.retroSongActive = true;
     this.retroSongWaveCount = 0;
     this.retroSongWavesToPlay = 2 + Math.floor(Math.random());
+    const tempo = 1.2;
 
     setTimeout(() => {
       const bassLine = [
@@ -877,24 +904,25 @@ class AudioManager {
         { f: 110.0, d: 0.12 }, // A2
       ];
 
-      const loopDuration = 840;
+      const loopDuration = 840 * tempo;
 
       const loop = () => {
         const now = this.ctx.currentTime;
         let tBass = now;
         for (const n of bassLine) {
+          const duration = n.d * tempo;
           this._tone(
             {
               from: n.f,
               to: n.f,
-              duration: n.d,
+              duration,
               type: "sine",
               gain: 0.22,
             },
             this.sfxGain,
             tBass
           );
-          tBass += n.d;
+          tBass += duration;
         }
       };
 

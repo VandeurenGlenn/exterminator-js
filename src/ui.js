@@ -13,9 +13,12 @@ export const dom = {
   startScreen: document.getElementById("start-screen"),
   beginBtn: document.getElementById("begin-game"),
   selectTurretBtn: document.getElementById("select-turret"),
+  selectSniperBtn: document.getElementById("select-sniper"),
   selectWallBtn: document.getElementById("select-wall"),
   selectTrapBtn: document.getElementById("select-trap"),
   selectUpgradeBtn: document.getElementById("select-upgrade"),
+  selectUpgradeDamageBtn: document.getElementById("select-upgrade-damage"),
+  selectUpgradeSpeedBtn: document.getElementById("select-upgrade-speed"),
   selectSellBtn: document.getElementById("select-sell"),
   soundVolumeInput: document.getElementById("sound-volume"),
   soundVolumeLabel: document.getElementById("sound-volume-label"),
@@ -62,11 +65,24 @@ export function setTabActive(tab) {
 
 export function setBuildButtonActive(mode) {
   const isTurret = mode === "turret";
+  const isSniper = mode === "sniper";
   const isWall = mode === "wall";
   dom.selectTurretBtn?.classList.toggle("active", isTurret);
+  dom.selectSniperBtn?.classList.toggle("active", isSniper);
   dom.selectWallBtn?.classList.toggle("active", isWall);
   dom.selectTrapBtn?.classList.toggle("active", mode === "trap");
-  dom.selectUpgradeBtn?.classList.toggle("active", mode === "upgrade");
+  dom.selectUpgradeBtn?.classList.toggle(
+    "active",
+    mode === "upgrade" || mode === "upgrade-damage" || mode === "upgrade-speed"
+  );
+  dom.selectUpgradeDamageBtn?.classList.toggle(
+    "active",
+    mode === "upgrade-damage"
+  );
+  dom.selectUpgradeSpeedBtn?.classList.toggle(
+    "active",
+    mode === "upgrade-speed"
+  );
   dom.selectSellBtn?.classList.toggle("active", mode === "sell");
 }
 

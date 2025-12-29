@@ -58,7 +58,13 @@ const handlers = {
 
     if (mode) {
       const targetTab =
-        mode === "trap" ? "trap" : mode === "upgrade" ? "upgrade" : "build";
+        mode === "trap"
+          ? "trap"
+          : mode === "upgrade" ||
+            mode === "upgrade-damage" ||
+            mode === "upgrade-speed"
+          ? "upgrade"
+          : "build";
       if (targetTab !== gameState.currentTab) {
         gameState.setTab(targetTab);
         setTabActive(targetTab);
@@ -71,15 +77,23 @@ const handlers = {
     setTabActive(tab);
 
     if (tab === "build") {
-      if (gameState.currentMode) {
-        this.setBuildMode(
-          gameState.currentMode === "wall" ? "wall" : gameState.currentMode
-        );
-      }
+      const buildModes = ["turret", "sniper", "wall"];
+      const fallback = "turret";
+      const mode = buildModes.includes(gameState.currentMode)
+        ? gameState.currentMode
+        : fallback;
+      this.setBuildMode(mode);
     } else if (tab === "trap") {
       this.setBuildMode("trap");
     } else if (tab === "upgrade") {
-      this.setBuildMode(gameState.currentMode === "sell" ? "sell" : "upgrade");
+      if (
+        gameState.currentMode === "upgrade-damage" ||
+        gameState.currentMode === "upgrade-speed"
+      ) {
+        this.setBuildMode(gameState.currentMode);
+      } else {
+        this.setBuildMode("upgrade-damage");
+      }
     }
   },
 
@@ -88,7 +102,10 @@ const handlers = {
 
     switch (gameState.currentMode) {
       case "turret":
-        result = game.placeTower(pos);
+        result = game.placeTower(pos, "standard");
+        break;
+      case "sniper":
+        result = game.placeTower(pos, "sniper");
         break;
       case "wall":
         result = game.placeWall(pos);
@@ -97,7 +114,13 @@ const handlers = {
         result = game.placeTrap(pos);
         break;
       case "upgrade":
-        result = game.upgradeAt(pos);
+        result = game.upgradeTower(game.findTowerAt(pos), "damage");
+        break;
+      case "upgrade-damage":
+        result = game.upgradeTower(game.findTowerAt(pos), "damage");
+        break;
+      case "upgrade-speed":
+        result = game.upgradeTower(game.findTowerAt(pos), "speed");
         break;
       case "sell":
         result = game.sellAt(pos);
@@ -150,6 +173,10 @@ const handlers = {
     game.setDifficulty(gameState.selectedDifficulty);
     game.setMission(gameState.selectedMission);
     dom.startScreen.classList.add("hidden");
+  },
+
+  getCurrentMode() {
+    return gameState.currentMode;
   },
 };
 
