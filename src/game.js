@@ -1,3 +1,7 @@
+import { Enemy } from "./enemy.js";
+import { Bullet, Tower } from "./weapon.js";
+import { audio } from "./audio.js";
+
 const CONFIG = {
   width: 960,
   height: 540,
@@ -135,203 +139,6 @@ const CONFIG = {
   },
 };
 
-class Enemy {
-  constructor(
-    spawnPos,
-    goal,
-    wave,
-    difficulty = "normal",
-    insectClass = "ant",
-    gameRef = null
-  ) {
-    this.pos = { ...spawnPos };
-    this.goal = goal;
-    this.insectClass = insectClass;
-    const insectData = CONFIG.insectTypes[insectClass];
-    this.type = insectData.movement; // "flying" or "crawling"
-    this.gameRef = gameRef;
-    const diff = CONFIG.difficulties[difficulty];
-
-    // Apply insect-specific multipliers on top of wave/difficulty scaling
-    this.speed =
-      (CONFIG.enemyBaseSpeed + wave * 4) *
-      diff.enemySpeedMultiplier *
-      insectData.speedMultiplier;
-    this.hp =
-      (CONFIG.enemyBaseHP + wave * 8) *
-      diff.enemyHPMultiplier *
-      insectData.hpMultiplier;
-    this.maxHp = this.hp;
-    this.radius = 12 * insectData.size;
-    this.dead = false;
-    this.reward = insectData.reward;
-    this.damage = insectData.damage;
-    this.color = insectData.color;
-    this.headColor = insectData.headColor;
-    this.size = insectData.size;
-    this.slowTimer = 0;
-    this.slowFactor = 1;
-
-    // Crawling insects need pathfinding
-    if (this.type === "crawling" && gameRef) {
-      this.path = gameRef.computePath(spawnPos, goal);
-      this.pathIndex = 0;
-    }
-  }
-
-  update(dt) {
-    if (this.slowTimer > 0) {
-      this.slowTimer -= dt;
-      if (this.slowTimer <= 0) {
-        this.slowTimer = 0;
-        this.slowFactor = 1;
-      }
-    }
-    const effectiveSpeed = this.speed * this.slowFactor;
-
-    if (this.type === "flying") {
-      // Flying insects move directly toward goal
-      const dx = this.goal.x - this.pos.x;
-      const dy = this.goal.y - this.pos.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 1) return;
-      const step = (effectiveSpeed * dt) / dist;
-      this.pos.x += dx * step;
-      this.pos.y += dy * step;
-    } else {
-      // Crawling insects follow A* path strictly; no clipping through obstacles
-      if (
-        !this.path ||
-        this.path.length === 0 ||
-        this.pathIndex >= this.path.length
-      ) {
-        if (this.gameRef) {
-          this.path = this.gameRef.computePath(this.pos, this.goal);
-          this.pathIndex = 0;
-        }
-        if (!this.path) return;
-      }
-
-      const target = this.path[this.pathIndex];
-      const dx = target.x - this.pos.x;
-      const dy = target.y - this.pos.y;
-      const dist = Math.hypot(dx, dy) || 1;
-      const reachThreshold = 3;
-      if (dist <= reachThreshold) {
-        this.pathIndex += 1;
-        return;
-      }
-
-      const step = effectiveSpeed * dt;
-      const nx = this.pos.x + (dx / dist) * step;
-      const ny = this.pos.y + (dy / dist) * step;
-
-      // Hard stop if next cell is blocked by wall/tower
-      if (this.gameRef) {
-        const nextCell = this.gameRef.cellFromPoint({ x: nx, y: ny });
-        const nextKey = `${nextCell.cx},${nextCell.cy}`;
-        if (this.gameRef.walls.has(nextKey)) {
-          // Path obstructed; recompute from current position
-          this.recomputePath();
-          return;
-        }
-      }
-
-      this.pos.x = nx;
-      this.pos.y = ny;
-    }
-  }
-
-  recomputePath() {
-    if (this.type !== "crawling" || !this.gameRef) return;
-    const newPath = this.gameRef.computePath(this.pos, this.goal);
-    this.path = newPath || this.path;
-    this.pathIndex = 0;
-  }
-
-  reachedBase() {
-    const dx = this.goal.x - this.pos.x;
-    const dy = this.goal.y - this.pos.y;
-    const dist = Math.hypot(dx, dy);
-    return dist < 20;
-  }
-
-  applySlow(factor, duration) {
-    if (factor < this.slowFactor || this.slowTimer <= 0) {
-      this.slowFactor = factor;
-      this.slowTimer = duration;
-    }
-  }
-}
-
-class Bullet {
-  constructor(from, target) {
-    this.pos = { ...from };
-    this.target = target;
-    this.speed = CONFIG.bulletSpeed;
-    this.dead = false;
-    this.radius = 5;
-    this.damage = CONFIG.towerDamage;
-  }
-
-  update(dt) {
-    if (!this.target || this.target.dead) {
-      this.dead = true;
-      return;
-    }
-    const dx = this.target.pos.x - this.pos.x;
-    const dy = this.target.pos.y - this.pos.y;
-    const dist = Math.hypot(dx, dy) || 1;
-    const step = (this.speed * dt) / dist;
-    this.pos.x += dx * step;
-    this.pos.y += dy * step;
-    if (dist < this.radius + this.target.radius) {
-      this.dead = true;
-      this.target.hp -= this.damage;
-      if (this.target.hp <= 0) {
-        this.target.dead = true;
-      }
-    }
-  }
-}
-
-class Tower {
-  constructor(pos) {
-    this.pos = pos;
-    this.range = CONFIG.towerRange;
-    this.fireRate = CONFIG.towerFireRate;
-    this.cooldown = 0;
-    this.level = 1;
-    this.damage = CONFIG.towerDamage;
-  }
-
-  update(dt, enemies, bullets) {
-    this.cooldown -= dt;
-    if (this.cooldown > 0) return;
-    const target = this.acquireTarget(enemies);
-    if (target) {
-      const bullet = new Bullet(this.pos, target);
-      bullet.damage = this.damage;
-      bullets.push(bullet);
-      this.cooldown = this.fireRate;
-    }
-  }
-
-  acquireTarget(enemies) {
-    let closest = null;
-    let closestDist = Infinity;
-    for (const e of enemies) {
-      if (e.dead) continue;
-      const d = Math.hypot(e.pos.x - this.pos.x, e.pos.y - this.pos.y);
-      if (d <= this.range && d < closestDist) {
-        closestDist = d;
-        closest = e;
-      }
-    }
-    return closest;
-  }
-}
-
 export class Game {
   constructor(canvas, uiUpdater) {
     this.canvas = canvas;
@@ -339,8 +146,13 @@ export class Game {
     this.ui = uiUpdater;
     this.difficulty = "easy";
     this.mission = "1";
+    this.buildMode = null;
     this.reset();
     this.loop = this.loop.bind(this);
+  }
+
+  setBuildMode(mode) {
+    this.buildMode = mode;
   }
 
   setDifficulty(difficulty) {
@@ -369,20 +181,34 @@ export class Game {
     this.spawnQueue = 0;
     this.waveTotal = 0;
     this.state = "idle";
+    this.isPaused = false;
     this.lastTime = 0;
     this.createInitialWalls();
     this.paths = this.computeAllPaths();
     this.cursorPos = null;
     this.ui(this);
     this.draw();
+    this.buildMode = null; // Reset build mode on reset
   }
 
   start() {
     if (this.state === "running") return;
     this.state = "running";
+    this.isPaused = false;
     this.waveTotal = this.spawnQueue = this.waveSize();
     this.lastTime = performance.now();
     requestAnimationFrame(this.loop);
+  }
+
+  togglePause() {
+    if (this.state === "running") {
+      this.isPaused = !this.isPaused;
+      this.lastTime = performance.now();
+      this.ui(this);
+      if (!this.isPaused) {
+        requestAnimationFrame(this.loop);
+      }
+    }
   }
 
   restart() {
@@ -416,6 +242,7 @@ export class Game {
 
   placeTower(pos) {
     if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.isPaused) return { ok: false, reason: "Game paused" };
     if (this.scrap < CONFIG.towerCost)
       return { ok: false, reason: "Need more scrap" };
     const cell = this.cellFromPoint(pos);
@@ -444,6 +271,7 @@ export class Game {
     this.paths = newPaths;
     this.scrap -= CONFIG.towerCost;
     this.towers.push(new Tower(snapPos));
+    audio.playBuild();
 
     // Recompute paths for crawling enemies
     for (const e of this.enemies) {
@@ -459,6 +287,7 @@ export class Game {
 
   placeWall(pos) {
     if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.isPaused) return { ok: false, reason: "Game paused" };
     if (this.scrap < CONFIG.wallCost)
       return { ok: false, reason: "Need more scrap" };
 
@@ -497,6 +326,7 @@ export class Game {
 
     this.paths = newPaths;
     this.scrap -= CONFIG.wallCost;
+    audio.playBuild();
 
     // Recompute paths for crawling enemies
     for (const e of this.enemies) {
@@ -512,6 +342,7 @@ export class Game {
 
   placeTrap(pos) {
     if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.isPaused) return { ok: false, reason: "Game paused" };
     if (this.scrap < CONFIG.trapCost)
       return { ok: false, reason: "Need more scrap" };
 
@@ -534,6 +365,7 @@ export class Game {
       slowTime: 2.5,
     });
     this.scrap -= CONFIG.trapCost;
+    audio.playBuild();
     this.ui(this);
     this.draw();
     return { ok: true };
@@ -541,6 +373,7 @@ export class Game {
 
   upgradeAt(pos) {
     if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (!tower) return { ok: false, reason: "No tower here" };
     if (this.scrap < CONFIG.upgradeCost)
@@ -551,6 +384,7 @@ export class Game {
     tower.fireRate = Math.max(0.22, tower.fireRate * 0.88);
     tower.damage += 8;
     this.scrap -= CONFIG.upgradeCost;
+    audio.playUpgrade();
     this.ui(this);
     this.draw();
     return { ok: true };
@@ -558,6 +392,7 @@ export class Game {
 
   sellAt(pos) {
     if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (tower) {
       const refund = Math.round(
@@ -571,6 +406,7 @@ export class Game {
         this.walls.delete(key);
         this.paths = this.computeAllPaths() || this.paths;
       }
+      audio.playSell();
       this.ui(this);
       this.draw();
       return { ok: true };
@@ -596,6 +432,11 @@ export class Game {
 
   loop(time) {
     if (this.state !== "running") return;
+    if (this.isPaused) {
+      this.draw();
+      requestAnimationFrame(this.loop);
+      return;
+    }
     const dt = Math.min((time - this.lastTime) / 1000, 0.05);
     this.lastTime = time;
     this.update(dt);
@@ -628,7 +469,14 @@ export class Game {
     if (missionComplete) {
       this.state = "victory";
     } else if (this.enemies.length === 0 && this.spawnQueue === 0) {
+      // Wave cleared - play celebration sounds
+      audio.playWaveClear();
       this.wave += 1;
+      audio.playWaveComplete(this.wave);
+      // Play the retro song after first wave, then every 3 waves (fades out bg music automatically)
+      if (this.wave === 2 || this.wave % 3 === 2) {
+        audio.playRetroSong();
+      }
       this.waveTotal = this.spawnQueue = this.waveSize();
     }
 
@@ -649,6 +497,7 @@ export class Game {
           e.hp -= trap.damage;
           e.applySlow(trap.slow, trap.slowTime);
           trap.used = true;
+          audio.playTrap();
           break;
         }
       }
@@ -673,6 +522,7 @@ export class Game {
       CONFIG.start,
       CONFIG.goal,
       this.wave,
+      CONFIG,
       this.difficulty,
       insectClass,
       this
@@ -696,6 +546,7 @@ export class Game {
         e.dead = true;
         e.reward = 0;
         this.hp = Math.max(0, this.hp - e.damage);
+        audio.playBaseHit();
       }
     }
   }
@@ -1079,40 +930,104 @@ export class Game {
     const { ctx } = this;
     // Towers - staple gun style
     for (const t of this.towers) {
-      const color = this.hp <= 4 ? "#ffb703" : "#ff8c42";
-      // Base
-      ctx.fillStyle = color;
-      ctx.fillRect(t.pos.x - 8, t.pos.y - 8, 16, 16);
-      ctx.fillStyle = "rgba(0,0,0,0.2)";
-      ctx.fillRect(t.pos.x - 8, t.pos.y + 2, 16, 6);
-      // Barrel
-      ctx.fillStyle = "#555";
-      ctx.fillRect(t.pos.x - 3, t.pos.y - 12, 6, 8);
-      // Highlight
-      ctx.fillStyle = "rgba(255,255,255,0.3)";
-      ctx.fillRect(t.pos.x - 6, t.pos.y - 6, 4, 4);
-      // Range indicator
-      ctx.strokeStyle = "rgba(255,255,255,0.05)";
-      ctx.lineWidth = 1;
+      ctx.save();
+      ctx.translate(t.pos.x, t.pos.y);
+      const baseColor = this.hp <= 4 ? "#ffb703" : "#ff8c42";
+      const baseSize = 22;
+      const half = baseSize / 2;
+
+      // Platform shadow
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
       ctx.beginPath();
-      ctx.arc(t.pos.x, t.pos.y, t.range, 0, Math.PI * 2);
+      ctx.ellipse(2, 5, baseSize * 0.7, baseSize * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Base block
+      const baseGrad = ctx.createLinearGradient(-half, -half, half, half);
+      baseGrad.addColorStop(0, baseColor);
+      baseGrad.addColorStop(1, "#ffd8a0");
+      ctx.fillStyle = baseGrad;
+      ctx.fillRect(-half, -half, baseSize, baseSize);
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-half + 0.5, -half + 0.5, baseSize - 1, baseSize - 1);
+
+      // Vent lines
+      ctx.fillStyle = "rgba(0,0,0,0.22)";
+      ctx.fillRect(-half + 4, -half + 4, baseSize - 8, 3);
+      ctx.fillRect(-half + 4, -half + 10, baseSize - 8, 3);
+
+      // Top ring
+      ctx.fillStyle = "#111926";
+      ctx.beginPath();
+      ctx.arc(0, 0, 13, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.14)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(0, 0, 13, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Barrel (rotates toward target)
+      ctx.save();
+      ctx.rotate((t.angle ?? -Math.PI / 2) + Math.PI / 2);
+      const barrelWidth = 8;
+      const barrelLength = 18;
+      ctx.fillStyle = "#323b4d";
+      ctx.fillRect(
+        -barrelWidth / 2,
+        -13 - barrelLength,
+        barrelWidth,
+        barrelLength
+      );
+      ctx.strokeStyle = "rgba(255,255,255,0.2)";
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(
+        -barrelWidth / 2 + 0.5,
+        -13 - barrelLength + 0.5,
+        barrelWidth - 1,
+        barrelLength - 1
+      );
+      ctx.fillStyle = "#c6d0dc";
+      ctx.fillRect(-barrelWidth / 2, -13 - barrelLength - 4, barrelWidth, 6);
+
+      // Sight highlight
+      ctx.fillStyle = "rgba(255,255,255,0.3)";
+      ctx.beginPath();
+      ctx.arc(0, -8, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Range indicator
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(0, 0, t.range, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Enemies - bug/insect style
     for (const e of this.enemies) {
-      // Different visuals for flying vs crawling
+      ctx.save();
+      ctx.translate(e.pos.x, e.pos.y);
+
+      // Shadow
+      ctx.fillStyle = "rgba(0,0,0,0.3)";
+      ctx.beginPath();
+      ctx.ellipse(3, 5, e.radius * 0.9, e.radius * 0.45, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Wings for flying insects
       if (e.type === "flying") {
-        // Flying insect - with wings
-        // Wings
-        ctx.globalAlpha = 0.4;
-        ctx.fillStyle = "#c0c0c0";
+        ctx.globalAlpha = 0.35;
+        ctx.fillStyle = "#dfe7f5";
         ctx.beginPath();
         ctx.ellipse(
-          e.pos.x - 8,
-          e.pos.y - 4,
-          8 * e.size,
-          4 * e.size,
+          -6,
+          -5,
+          e.radius,
+          e.radius * 0.45,
           -Math.PI / 6,
           0,
           Math.PI * 2
@@ -1120,66 +1035,98 @@ export class Game {
         ctx.fill();
         ctx.beginPath();
         ctx.ellipse(
-          e.pos.x - 8,
-          e.pos.y + 4,
-          8 * e.size,
-          4 * e.size,
+          -6,
+          5,
+          e.radius,
+          e.radius * 0.45,
           Math.PI / 6,
           0,
           Math.PI * 2
         );
         ctx.fill();
-        ctx.globalAlpha = 1.0;
-        // Body with insect-specific color
-        ctx.fillStyle = e.color;
-      } else {
-        // Crawling insect - no wings, insect-specific color
-        ctx.fillStyle = e.color;
+        ctx.globalAlpha = 1;
       }
 
       // Body
+      const bodyGrad = ctx.createLinearGradient(
+        -e.radius,
+        -e.radius,
+        e.radius,
+        e.radius
+      );
+      bodyGrad.addColorStop(0, e.color);
+      bodyGrad.addColorStop(1, "rgba(255,255,255,0.2)");
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, e.radius, e.radius * 0.72, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.38)";
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Stripes
+      ctx.strokeStyle = "rgba(0,0,0,0.28)";
+      ctx.lineWidth = 2;
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * e.radius * 0.25, -e.radius * 0.7);
+        ctx.lineTo(i * e.radius * 0.25, e.radius * 0.7);
+        ctx.stroke();
+      }
+
+      // Head
+      ctx.fillStyle = e.headColor;
       ctx.beginPath();
       ctx.ellipse(
-        e.pos.x,
-        e.pos.y,
-        e.radius,
-        e.radius * 0.7,
+        -e.radius * 0.75,
+        0,
+        e.radius * 0.55,
+        e.radius * 0.55,
         0,
         0,
         Math.PI * 2
       );
       ctx.fill();
-      // Head
-      ctx.fillStyle = e.headColor;
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // Antennae
+      ctx.strokeStyle = "rgba(0,0,0,0.45)";
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.arc(e.pos.x - 6, e.pos.y, 6, 0, Math.PI * 2);
-      ctx.fill();
-      // Legs (simple lines)
-      ctx.strokeStyle = "#6b2828";
-      ctx.lineWidth = 2;
-      for (let i = -1; i <= 1; i++) {
-        ctx.beginPath();
-        ctx.moveTo(e.pos.x + i * 4, e.pos.y + 6);
-        ctx.lineTo(e.pos.x + i * 4 + 2, e.pos.y + 12);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(e.pos.x + i * 4, e.pos.y - 6);
-        ctx.lineTo(e.pos.x + i * 4 + 2, e.pos.y - 12);
-        ctx.stroke();
-      }
+      ctx.moveTo(-e.radius * 1.15, -e.radius * 0.25);
+      ctx.quadraticCurveTo(
+        -e.radius * 1.1,
+        -e.radius * 0.9,
+        -e.radius * 0.35,
+        -e.radius * 1.1
+      );
+      ctx.moveTo(-e.radius * 1.15, e.radius * 0.25);
+      ctx.quadraticCurveTo(
+        -e.radius * 1.1,
+        e.radius * 0.9,
+        -e.radius * 0.35,
+        e.radius * 1.1
+      );
+      ctx.stroke();
+
       // Eyes
-      ctx.fillStyle = "#ff0000";
+      ctx.fillStyle = "#ff5c8a";
       ctx.beginPath();
-      ctx.arc(e.pos.x - 8, e.pos.y - 2, 2, 0, Math.PI * 2);
-      ctx.arc(e.pos.x - 8, e.pos.y + 2, 2, 0, Math.PI * 2);
+      ctx.arc(-e.radius * 0.9, -e.radius * 0.2, 2.4, 0, Math.PI * 2);
+      ctx.arc(-e.radius * 0.9, e.radius * 0.2, 2.4, 0, Math.PI * 2);
       ctx.fill();
+
       // HP bar
       const hpPct = Math.max(0, e.hp) / e.maxHp;
-      ctx.fillStyle = "rgba(0,0,0,0.5)";
-      ctx.fillRect(e.pos.x - 12, e.pos.y - 22, 24, 5);
+      ctx.fillStyle = "rgba(0,0,0,0.55)";
+      ctx.fillRect(-14, -e.radius - 16, 28, 6);
       ctx.fillStyle =
         hpPct > 0.5 ? "#2dd4bf" : hpPct > 0.25 ? "#ffb703" : "#ff4d6d";
-      ctx.fillRect(e.pos.x - 11, e.pos.y - 21, 22 * hpPct, 3);
+      ctx.fillRect(-13, -e.radius - 15, 26 * hpPct, 4);
+
+      ctx.restore();
     }
 
     // Bullets - staple style
@@ -1218,39 +1165,49 @@ export class Game {
   drawWalls() {
     const { ctx } = this;
     for (const cell of this.wallList) {
-      const x = cell.cx * CONFIG.gridSize;
-      const y = cell.cy * CONFIG.gridSize;
-      // Base wall color
-      ctx.fillStyle = "#5d4e37";
-      ctx.fillRect(x, y, CONFIG.gridSize, CONFIG.gridSize);
-      // Top highlight
-      ctx.fillStyle = "rgba(139,115,85,0.8)";
-      ctx.fillRect(x, y, CONFIG.gridSize, 4);
-      // Side shadow
-      ctx.fillStyle = "rgba(0,0,0,0.3)";
-      ctx.fillRect(x + CONFIG.gridSize - 4, y, 4, CONFIG.gridSize);
-      ctx.fillRect(x, y + CONFIG.gridSize - 4, CONFIG.gridSize, 4);
-      // Edge lines
-      ctx.strokeStyle = "rgba(0,0,0,0.15)";
-      ctx.lineWidth = 1;
-      ctx.strokeRect(
-        x + 0.5,
-        y + 0.5,
-        CONFIG.gridSize - 1,
-        CONFIG.gridSize - 1
-      );
-      // Texture dots
-      ctx.fillStyle = "rgba(0,0,0,0.1)";
-      for (let i = 0; i < 3; i++) {
-        const dotX = x + 6 + i * 6;
-        const dotY = y + 8 + (i % 2) * 8;
-        ctx.fillRect(dotX, dotY, 2, 2);
+      const pad = -2;
+      const size = CONFIG.gridSize - pad * 2;
+      const x = cell.cx * CONFIG.gridSize + pad;
+      const y = cell.cy * CONFIG.gridSize + pad;
+
+      ctx.save();
+      ctx.translate(x, y);
+
+      const baseGrad = ctx.createLinearGradient(0, 0, size, size);
+      baseGrad.addColorStop(0, "#6b5a3f");
+      baseGrad.addColorStop(1, "#8c7955");
+      ctx.fillStyle = baseGrad;
+      ctx.fillRect(0, 0, size, size);
+
+      // Top lip and shadows
+      ctx.fillStyle = "rgba(255,255,255,0.08)";
+      ctx.fillRect(0, 0, size, 5);
+      ctx.fillStyle = "rgba(0,0,0,0.2)";
+      ctx.fillRect(size - 5, 0, 5, size);
+      ctx.fillRect(0, size - 5, size, 5);
+
+      // Outline
+      ctx.strokeStyle = "rgba(0,0,0,0.25)";
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(0.5, 0.5, size - 1, size - 1);
+
+      // Rivets
+      ctx.fillStyle = "rgba(255,255,255,0.16)";
+      const rivetPositions = [
+        [5, 5],
+        [size / 2 - 2, size / 2 - 2],
+        [size - 9, size - 9],
+      ];
+      for (const [rx, ry] of rivetPositions) {
+        ctx.fillRect(rx, ry, 3, 3);
       }
+
+      ctx.restore();
     }
   }
 
   drawCursor() {
-    if (!this.cursorPos || this.state === "over") return;
+    if (!this.cursorPos || this.state === "over" || !this.buildMode) return;
     const { ctx } = this;
     const valid = this.isBuildable(this.cursorPos);
     ctx.fillStyle = valid ? "rgba(45,212,191,0.18)" : "rgba(255,77,109,0.14)";

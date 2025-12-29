@@ -108,11 +108,38 @@
         <div class="stat"><span>Base HP</span><strong id="hp">0</strong></div>
       </div>
       <div class="controls">
-        <div id="state" class="pill pill-idle">Idle</div>
-        <div id="mode" class="pill">Turret</div>
-        <button id="wall-mode" class="ghost">Wall Mode</button>
-        <button id="start">Start Run</button>
-        <button id="restart">Restart</button>
+        <div class="start-pause-wrapper">
+          <button id="start" class="icon-btn" title="Start Run (Space)">
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M8 5v14l11-7z" fill="currentColor" />
+            </svg>
+          </button>
+          <button id="pause" class="icon-btn" title="Pause (P)">
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+        <button id="restart" class="icon-btn" title="Restart (R)">
+          <svg
+            class="icon"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M7 7h10v3l4-4-4-4v3H5c-1.1 0-2 .9-2 2v10h2V7z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
       </div>
     </div>
 
@@ -132,7 +159,15 @@
     </div>
 
     <main>
-      <canvas id="game" width="960" height="540"></canvas>
+      <div class="canvas-container">
+        <canvas id="game" width="960" height="540"></canvas>
+        <div id="pause-overlay" class="pause-overlay">
+          <div class="pause-content">
+            <div class="pause-text">PAUSED</div>
+            <div class="pause-hint">Press P to Resume</div>
+          </div>
+        </div>
+      </div>
       <div class="sell-strip" aria-label="Sell Action">
         <button
           id="select-sell"
@@ -440,6 +475,23 @@
                 <span class="mission-name">Infestation</span>
               </button>
             </div>
+          </div>
+
+          <div class="start-selector">
+            <label>Sound</label>
+            <div class="slider-row">
+              <input
+                id="sound-volume"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value="0.7"
+                aria-label="Sound volume"
+              />
+              <span class="slider-value" id="sound-volume-label">70%</span>
+            </div>
+            <p class="slider-help">Adjust overall SFX + soundtrack level.</p>
           </div>
         </div>
 
