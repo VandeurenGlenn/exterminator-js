@@ -5,10 +5,10 @@ import { audio } from "./audio.js";
 const CONFIG = {
   width: 960,
   height: 540,
-  towerCost: 50,
-  wallCost: 20,
-  trapCost: 30,
-  upgradeCost: 70,
+  towerCost: 60,
+  wallCost: 25,
+  trapCost: 40,
+  upgradeCost: 85,
   refundRate: 0.6,
   baseHP: 20,
   startingScrap: 100,
@@ -25,25 +25,25 @@ const CONFIG = {
   gridSize: 24,
   difficulties: {
     easy: {
-      enemyHPMultiplier: 0.7,
-      enemySpeedMultiplier: 0.8,
-      waveMultiplier: 0.8,
-      startingScrap: 150,
-      baseHP: 25,
+      enemyHPMultiplier: 1.1,
+      enemySpeedMultiplier: 1.05,
+      waveMultiplier: 1.05,
+      startingScrap: 85,
+      baseHP: 18,
     },
     normal: {
-      enemyHPMultiplier: 1.0,
-      enemySpeedMultiplier: 1.0,
-      waveMultiplier: 1.0,
-      startingScrap: 100,
-      baseHP: 20,
+      enemyHPMultiplier: 1.25,
+      enemySpeedMultiplier: 1.15,
+      waveMultiplier: 1.15,
+      startingScrap: 80,
+      baseHP: 15,
     },
     hard: {
-      enemyHPMultiplier: 1.5,
-      enemySpeedMultiplier: 1.3,
-      waveMultiplier: 1.3,
-      startingScrap: 75,
-      baseHP: 15,
+      enemyHPMultiplier: 1.75,
+      enemySpeedMultiplier: 1.4,
+      waveMultiplier: 1.4,
+      startingScrap: 65,
+      baseHP: 12,
     },
   },
   missions: {
@@ -197,6 +197,8 @@ export class Game {
     this.isPaused = false;
     this.waveTotal = this.spawnQueue = this.waveSize();
     this.lastTime = performance.now();
+    // Start first retro song immediately when game begins
+    audio.playRetroSong();
     requestAnimationFrame(this.loop);
   }
 
@@ -205,7 +207,10 @@ export class Game {
       this.isPaused = !this.isPaused;
       this.lastTime = performance.now();
       this.ui(this);
-      if (!this.isPaused) {
+      if (this.isPaused) {
+        audio.startMusic();
+      } else {
+        audio.stopMusic();
         requestAnimationFrame(this.loop);
       }
     }
@@ -473,9 +478,36 @@ export class Game {
       audio.playWaveClear();
       this.wave += 1;
       audio.playWaveComplete(this.wave);
-      // Play the retro song after first wave, then every 3 waves (fades out bg music automatically)
-      if (this.wave === 2 || this.wave % 3 === 2) {
-        audio.playRetroSong();
+      audio.onWaveComplete(); // Check if retro song should stop
+      // Play a different retro song - every 2 waves early game, every wave after wave 10
+      const changeFrequency = this.wave > 10 ? 1 : 2;
+      if (this.wave === 2 || this.wave % changeFrequency === 0) {
+        const songChoice = Math.floor((this.wave - 2) / 2) % 12;
+        if (songChoice === 0) {
+          audio.playRetroSong();
+        } else if (songChoice === 1) {
+          audio.playRetroSong2();
+        } else if (songChoice === 2) {
+          audio.playRetroSong3();
+        } else if (songChoice === 3) {
+          audio.playRetroSong4();
+        } else if (songChoice === 4) {
+          audio.playRetroSong5();
+        } else if (songChoice === 5) {
+          audio.playRetroSong6();
+        } else if (songChoice === 6) {
+          audio.playRetroSong7();
+        } else if (songChoice === 7) {
+          audio.playRetroSong8();
+        } else if (songChoice === 8) {
+          audio.playRetroSong9();
+        } else if (songChoice === 9) {
+          audio.playRetroSong10();
+        } else if (songChoice === 10) {
+          audio.playRetroSong11();
+        } else {
+          audio.playRetroSong12();
+        }
       }
       this.waveTotal = this.spawnQueue = this.waveSize();
     }

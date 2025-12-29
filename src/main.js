@@ -27,6 +27,22 @@ const game = new Game(dom.canvas, onGameStateChange);
 game.draw();
 gameState.setTab("build");
 
+// Initialize audio and start background music on start screen
+audio.init();
+audio.setMasterVolume(gameState.soundVolume);
+audio.startMusic();
+
+// Ensure audio context starts on user interaction (required by most browsers)
+function resumeAudioContext() {
+  if (audio.ctx && audio.ctx.state === "suspended") {
+    audio.ctx.resume();
+  }
+  document.removeEventListener("click", resumeAudioContext);
+  document.removeEventListener("touchstart", resumeAudioContext);
+}
+document.addEventListener("click", resumeAudioContext);
+document.addEventListener("touchstart", resumeAudioContext);
+
 // UI update callback
 function onGameStateChange(state) {
   updateStats(state);
@@ -130,7 +146,7 @@ const handlers = {
   beginGame() {
     audio.init();
     audio.setMasterVolume(gameState.soundVolume);
-    audio.startMusic();
+    audio.stopMusic();
     game.setDifficulty(gameState.selectedDifficulty);
     game.setMission(gameState.selectedMission);
     dom.startScreen.classList.add("hidden");
