@@ -407,15 +407,6 @@ class AudioManager {
         { f: 110.0, d: 0.2 }, // A2
       ];
 
-      const melody = [
-        { f: 493.88, d: 0.1 }, // B4
-        { f: 440.0, d: 0.1 }, // A4
-        { f: 392.0, d: 0.1 }, // G4
-        { f: 440.0, d: 0.1 }, // A4
-        { f: 329.63, d: 0.2 }, // E4
-        { f: 392.0, d: 0.2 }, // G4
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -436,23 +427,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.98,
-              duration: m.d,
-              type: "square",
-              gain: 0.15,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -485,16 +459,6 @@ class AudioManager {
         { f: 174.61, d: 0.1 }, // F3
       ];
 
-      const melody = [
-        { f: 523.25, d: 0.1 }, // C5
-        { f: 659.25, d: 0.1 }, // E5
-        { f: 783.99, d: 0.1 }, // G5
-        { f: 659.25, d: 0.1 }, // E5
-        { f: 587.33, d: 0.1 }, // D5
-        { f: 523.25, d: 0.1 }, // C5
-        { f: 587.33, d: 0.2 }, // D5
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -515,23 +479,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now + 0.1;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.97,
-              duration: m.d,
-              type: "sine",
-              gain: 0.16,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -560,14 +507,6 @@ class AudioManager {
         { f: 110.0, d: 0.04 }, // A2 (quick punctuation)
       ];
 
-      const melody = [
-        { f: 369.99, d: 0.16 }, // F#4
-        { f: 440.0, d: 0.16 }, // A4
-        { f: 329.63, d: 0.16 }, // E4
-        { f: 440.0, d: 0.16 }, // A4
-        { f: 369.99, d: 0.16 }, // F#4
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -587,23 +526,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.99,
-              duration: m.d,
-              type: "triangle",
-              gain: 0.14,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -633,17 +555,6 @@ class AudioManager {
         { f: 174.61, d: 0.08 }, // F3
       ];
 
-      const melody = [
-        { f: 587.33, d: 0.08 }, // D5
-        { f: 659.25, d: 0.08 }, // E5
-        { f: 783.99, d: 0.08 }, // G5
-        { f: 659.25, d: 0.08 }, // E5
-        { f: 587.33, d: 0.08 }, // D5
-        { f: 523.25, d: 0.08 }, // C5
-        { f: 659.25, d: 0.08 }, // E5
-        { f: 587.33, d: 0.08 }, // D5
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -663,23 +574,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.97,
-              duration: m.d,
-              type: "square",
-              gain: 0.17,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -705,13 +599,6 @@ class AudioManager {
         { f: 82.41, d: 0.2 }, // E2
       ];
 
-      const melody = [
-        { f: 261.63, d: 0.2 }, // C4
-        { f: 329.63, d: 0.2 }, // E4
-        { f: 293.66, d: 0.2 }, // D4
-        { f: 329.63, d: 0.2 }, // E4
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -731,23 +618,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.98,
-              duration: m.d,
-              type: "sawtooth",
-              gain: 0.13,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -777,16 +647,6 @@ class AudioManager {
         { f: 174.61, d: 0.1 }, // F3
       ];
 
-      const melody = [
-        { f: 698.46, d: 0.1 }, // F5
-        { f: 523.25, d: 0.1 }, // C5
-        { f: 698.46, d: 0.1 }, // F5
-        { f: 880.0, d: 0.1 }, // A5
-        { f: 698.46, d: 0.1 }, // F5
-        { f: 783.99, d: 0.1 }, // G5
-        { f: 698.46, d: 0.2 }, // F5
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -805,23 +665,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now + 0.05;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.98,
-              duration: m.d,
-              type: "sine",
-              gain: 0.15,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -851,16 +694,6 @@ class AudioManager {
         { f: 98.0, d: 0.15 }, // G2
       ];
 
-      const melody = [
-        { f: 392.0, d: 0.15 }, // G4
-        { f: 523.25, d: 0.15 }, // C5
-        { f: 587.33, d: 0.15 }, // D5
-        { f: 659.25, d: 0.15 }, // E5
-        { f: 587.33, d: 0.15 }, // D5
-        { f: 523.25, d: 0.15 }, // C5
-        { f: 440.0, d: 0.3 }, // A4
-      ];
-
       const loopDuration = 1200;
 
       const loop = () => {
@@ -879,23 +712,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.96,
-              duration: m.d,
-              type: "square",
-              gain: 0.16,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -923,12 +739,6 @@ class AudioManager {
         { f: 146.83, d: 0.1 }, // D3
       ];
 
-      const melody = [
-        { f: 440.0, d: 0.4 }, // A4
-        { f: 523.25, d: 0.2 }, // C5
-        { f: 587.33, d: 0.2 }, // D5
-      ];
-
       const loopDuration = 800;
 
       const loop = () => {
@@ -947,23 +757,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.99,
-              duration: m.d,
-              type: "sine",
-              gain: 0.12,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -995,17 +788,6 @@ class AudioManager {
         { f: 196.0, d: 0.06 }, // G3
       ];
 
-      const melody = [
-        { f: 659.25, d: 0.06 }, // E5
-        { f: 783.99, d: 0.06 }, // G5
-        { f: 880.0, d: 0.06 }, // A5
-        { f: 1046.5, d: 0.06 }, // C6
-        { f: 880.0, d: 0.06 }, // A5
-        { f: 783.99, d: 0.06 }, // G5
-        { f: 659.25, d: 0.06 }, // E5
-        { f: 523.25, d: 0.12 }, // C5
-      ];
-
       const loopDuration = 600;
 
       const loop = () => {
@@ -1024,23 +806,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now + 0.12;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.98,
-              duration: m.d,
-              type: "triangle",
-              gain: 0.14,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -1066,13 +831,6 @@ class AudioManager {
         { f: 65.41, d: 0.25 }, // C2
       ];
 
-      const melody = [
-        { f: 293.66, d: 0.25 }, // D4
-        { f: 349.23, d: 0.25 }, // F4
-        { f: 293.66, d: 0.25 }, // D4
-        { f: 261.63, d: 0.25 }, // C4
-      ];
-
       const loopDuration = 1000;
 
       const loop = () => {
@@ -1091,23 +849,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.97,
-              duration: m.d,
-              type: "square",
-              gain: 0.14,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 
@@ -1136,16 +877,6 @@ class AudioManager {
         { f: 110.0, d: 0.12 }, // A2
       ];
 
-      const melody = [
-        { f: 523.25, d: 0.12 }, // C5
-        { f: 659.25, d: 0.12 }, // E5
-        { f: 783.99, d: 0.12 }, // G5
-        { f: 659.25, d: 0.12 }, // E5
-        { f: 587.33, d: 0.12 }, // D5
-        { f: 523.25, d: 0.12 }, // C5
-        { f: 440.0, d: 0.12 }, // A4
-      ];
-
       const loopDuration = 840;
 
       const loop = () => {
@@ -1164,23 +895,6 @@ class AudioManager {
             tBass
           );
           tBass += n.d;
-        }
-
-        // Play melody
-        let tMel = now;
-        for (const m of melody) {
-          this._tone(
-            {
-              from: m.f,
-              to: m.f * 0.98,
-              duration: m.d,
-              type: "triangle",
-              gain: 0.16,
-            },
-            this.sfxGain,
-            tMel
-          );
-          tMel += m.d;
         }
       };
 

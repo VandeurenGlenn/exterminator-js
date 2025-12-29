@@ -7,7 +7,7 @@ const INSECT_TYPES = {
     size: 1.0,
     color: "#8b4513",
     headColor: "#a0522d",
-    reward: 18,
+    reward: 12,
     damage: 1,
   },
   wasp: {
@@ -17,7 +17,7 @@ const INSECT_TYPES = {
     size: 0.85,
     color: "#ffd700",
     headColor: "#ffa500",
-    reward: 22,
+    reward: 16,
     damage: 1,
   },
   beetle: {
@@ -27,7 +27,7 @@ const INSECT_TYPES = {
     size: 1.15,
     color: "#2f4f4f",
     headColor: "#556b2f",
-    reward: 25,
+    reward: 18,
     damage: 2,
   },
   hornet: {
@@ -37,7 +37,7 @@ const INSECT_TYPES = {
     size: 1.1,
     color: "#ff6347",
     headColor: "#ff4500",
-    reward: 28,
+    reward: 20,
     damage: 2,
   },
 };
@@ -61,14 +61,18 @@ export class Enemy {
     const diff = config.difficulties[difficulty];
 
     // Apply insect-specific multipliers on top of wave/difficulty scaling
+    const speedBase = config.enemyBaseSpeed + wave * 3; // softer early speed
+    const speedLateFactor = 1 + Math.max(0, wave - 10) * 0.05; // faster late-game scaling
     this.speed =
-      (config.enemyBaseSpeed + wave * 4) *
+      speedBase *
+      speedLateFactor *
       diff.enemySpeedMultiplier *
       insectData.speedMultiplier;
+
+    const hpBase = config.enemyBaseHP + wave * 6; // softer early HP
+    const hpLateFactor = 1 + Math.max(0, wave - 10) * 0.08; // tougher late-game scaling
     this.hp =
-      (config.enemyBaseHP + wave * 8) *
-      diff.enemyHPMultiplier *
-      insectData.hpMultiplier;
+      hpBase * hpLateFactor * diff.enemyHPMultiplier * insectData.hpMultiplier;
     this.maxHp = this.hp;
     this.radius = 14 * insectData.size;
     this.dead = false;

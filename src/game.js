@@ -6,12 +6,12 @@ const CONFIG = {
   width: 960,
   height: 540,
   towerCost: 60,
-  wallCost: 25,
+  wallCost: 10,
   trapCost: 40,
   upgradeCost: 85,
   refundRate: 0.6,
   baseHP: 20,
-  startingScrap: 100,
+  startingScrap: 120,
   bulletSpeed: 460,
   towerRange: 140,
   towerFireRate: 0.55,
@@ -19,7 +19,7 @@ const CONFIG = {
   waveSpawnInterval: 0.75,
   enemyBaseHP: 20,
   enemyBaseSpeed: 65,
-  scrapPerKill: 18,
+  scrapPerKill: 14,
   start: { x: 80, y: 120 },
   goal: { x: 860, y: 420 },
   gridSize: 24,
@@ -28,21 +28,21 @@ const CONFIG = {
       enemyHPMultiplier: 1.1,
       enemySpeedMultiplier: 1.05,
       waveMultiplier: 1.05,
-      startingScrap: 85,
+      startingScrap: 100,
       baseHP: 18,
     },
     normal: {
       enemyHPMultiplier: 1.25,
       enemySpeedMultiplier: 1.15,
       waveMultiplier: 1.15,
-      startingScrap: 80,
+      startingScrap: 95,
       baseHP: 15,
     },
     hard: {
       enemyHPMultiplier: 1.75,
       enemySpeedMultiplier: 1.4,
       waveMultiplier: 1.4,
-      startingScrap: 65,
+      startingScrap: 80,
       baseHP: 12,
     },
   },
@@ -70,7 +70,7 @@ const CONFIG = {
       hpMultiplier: 0.8,
       speedMultiplier: 1.0,
       damage: 1,
-      reward: 15,
+      reward: 12,
       color: "#8b3a3a",
       headColor: "#a84444",
       size: 1.0,
@@ -82,7 +82,7 @@ const CONFIG = {
       hpMultiplier: 1.5,
       speedMultiplier: 0.6,
       damage: 2,
-      reward: 25,
+      reward: 18,
       color: "#2a2a2a",
       headColor: "#3a3a3a",
       size: 1.2,
@@ -94,7 +94,7 @@ const CONFIG = {
       hpMultiplier: 1.0,
       speedMultiplier: 1.4,
       damage: 1,
-      reward: 20,
+      reward: 15,
       color: "#4a3a5a",
       headColor: "#5a4a6a",
       size: 1.1,
@@ -106,7 +106,7 @@ const CONFIG = {
       hpMultiplier: 0.5,
       speedMultiplier: 1.3,
       damage: 1,
-      reward: 12,
+      reward: 9,
       color: "#9a7a5a",
       headColor: "#aa8a6a",
       size: 0.9,
@@ -118,7 +118,7 @@ const CONFIG = {
       hpMultiplier: 0.8,
       speedMultiplier: 1.5,
       damage: 2,
-      reward: 22,
+      reward: 16,
       color: "#c8a422",
       headColor: "#d8b432",
       size: 1.0,
@@ -130,7 +130,7 @@ const CONFIG = {
       hpMultiplier: 0.6,
       speedMultiplier: 1.1,
       damage: 1,
-      reward: 15,
+      reward: 11,
       color: "#8a8a7a",
       headColor: "#9a9a8a",
       size: 1.15,
@@ -223,7 +223,9 @@ export class Game {
 
   waveSize() {
     const diff = CONFIG.difficulties[this.difficulty];
-    return Math.floor((6 + this.wave * 3) * diff.waveMultiplier);
+    const base = 5 + this.wave * 2.4; // gentler early curve
+    const lateRamp = this.wave > 8 ? (this.wave - 8) * 1.6 : 0; // stronger mid/late scaling
+    return Math.floor((base + lateRamp) * diff.waveMultiplier);
   }
 
   createPath() {
