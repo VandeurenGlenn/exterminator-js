@@ -11,7 +11,7 @@ const CONFIG = {
   upgradeCost: 85,
   refundRate: 0.6,
   baseHP: 20,
-  startingScrap: 120,
+  startingScrap: 90,
   bulletSpeed: 460,
   towerRange: 140,
   towerFireRate: 0.55,
@@ -19,7 +19,7 @@ const CONFIG = {
   waveSpawnInterval: 0.75,
   enemyBaseHP: 20,
   enemyBaseSpeed: 65,
-  scrapPerKill: 14,
+  scrapPerKill: 8,
   start: { x: 80, y: 120 },
   goal: { x: 860, y: 420 },
   gridSize: 24,
@@ -28,21 +28,21 @@ const CONFIG = {
       enemyHPMultiplier: 1.1,
       enemySpeedMultiplier: 1.05,
       waveMultiplier: 1.05,
-      startingScrap: 100,
+      startingScrap: 85,
       baseHP: 18,
     },
     normal: {
       enemyHPMultiplier: 1.25,
       enemySpeedMultiplier: 1.15,
       waveMultiplier: 1.15,
-      startingScrap: 95,
+      startingScrap: 75,
       baseHP: 15,
     },
     hard: {
       enemyHPMultiplier: 1.75,
       enemySpeedMultiplier: 1.4,
       waveMultiplier: 1.4,
-      startingScrap: 80,
+      startingScrap: 60,
       baseHP: 12,
     },
   },
@@ -70,7 +70,7 @@ const CONFIG = {
       hpMultiplier: 0.8,
       speedMultiplier: 1.0,
       damage: 1,
-      reward: 12,
+      reward: 8,
       color: "#8b3a3a",
       headColor: "#a84444",
       size: 1.0,
@@ -82,7 +82,7 @@ const CONFIG = {
       hpMultiplier: 1.5,
       speedMultiplier: 0.6,
       damage: 2,
-      reward: 18,
+      reward: 12,
       color: "#2a2a2a",
       headColor: "#3a3a3a",
       size: 1.2,
@@ -94,7 +94,7 @@ const CONFIG = {
       hpMultiplier: 1.0,
       speedMultiplier: 1.4,
       damage: 1,
-      reward: 15,
+      reward: 10,
       color: "#4a3a5a",
       headColor: "#5a4a6a",
       size: 1.1,
@@ -106,7 +106,7 @@ const CONFIG = {
       hpMultiplier: 0.5,
       speedMultiplier: 1.3,
       damage: 1,
-      reward: 9,
+      reward: 6,
       color: "#9a7a5a",
       headColor: "#aa8a6a",
       size: 0.9,
@@ -118,7 +118,7 @@ const CONFIG = {
       hpMultiplier: 0.8,
       speedMultiplier: 1.5,
       damage: 2,
-      reward: 16,
+      reward: 11,
       color: "#c8a422",
       headColor: "#d8b432",
       size: 1.0,
@@ -130,7 +130,7 @@ const CONFIG = {
       hpMultiplier: 0.6,
       speedMultiplier: 1.1,
       damage: 1,
-      reward: 11,
+      reward: 8,
       color: "#8a8a7a",
       headColor: "#9a9a8a",
       size: 1.15,
@@ -481,35 +481,32 @@ export class Game {
       this.wave += 1;
       audio.playWaveComplete(this.wave);
       audio.onWaveComplete(); // Check if retro song should stop
-      // Play a different retro song - every 2 waves early game, every wave after wave 10
-      const changeFrequency = this.wave > 10 ? 1 : 2;
-      if (this.wave === 2 || this.wave % changeFrequency === 0) {
-        const songChoice = Math.floor((this.wave - 2) / 2) % 12;
-        if (songChoice === 0) {
-          audio.playRetroSong();
-        } else if (songChoice === 1) {
-          audio.playRetroSong2();
-        } else if (songChoice === 2) {
-          audio.playRetroSong3();
-        } else if (songChoice === 3) {
-          audio.playRetroSong4();
-        } else if (songChoice === 4) {
-          audio.playRetroSong5();
-        } else if (songChoice === 5) {
-          audio.playRetroSong6();
-        } else if (songChoice === 6) {
-          audio.playRetroSong7();
-        } else if (songChoice === 7) {
-          audio.playRetroSong8();
-        } else if (songChoice === 8) {
-          audio.playRetroSong9();
-        } else if (songChoice === 9) {
-          audio.playRetroSong10();
-        } else if (songChoice === 10) {
-          audio.playRetroSong11();
-        } else {
-          audio.playRetroSong12();
-        }
+      // Play a different retro song every wave
+      const songChoice = (this.wave - 1) % 12;
+      if (songChoice === 0) {
+        audio.playRetroSong();
+      } else if (songChoice === 1) {
+        audio.playRetroSong2();
+      } else if (songChoice === 2) {
+        audio.playRetroSong3();
+      } else if (songChoice === 3) {
+        audio.playRetroSong4();
+      } else if (songChoice === 4) {
+        audio.playRetroSong5();
+      } else if (songChoice === 5) {
+        audio.playRetroSong6();
+      } else if (songChoice === 6) {
+        audio.playRetroSong7();
+      } else if (songChoice === 7) {
+        audio.playRetroSong8();
+      } else if (songChoice === 8) {
+        audio.playRetroSong9();
+      } else if (songChoice === 9) {
+        audio.playRetroSong10();
+      } else if (songChoice === 10) {
+        audio.playRetroSong11();
+      } else {
+        audio.playRetroSong12();
       }
       this.waveTotal = this.spawnQueue = this.waveSize();
     }

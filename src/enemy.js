@@ -7,7 +7,7 @@ const INSECT_TYPES = {
     size: 1.0,
     color: "#8b4513",
     headColor: "#a0522d",
-    reward: 12,
+    reward: 8,
     damage: 1,
   },
   wasp: {
@@ -17,7 +17,7 @@ const INSECT_TYPES = {
     size: 0.85,
     color: "#ffd700",
     headColor: "#ffa500",
-    reward: 16,
+    reward: 11,
     damage: 1,
   },
   beetle: {
@@ -27,7 +27,7 @@ const INSECT_TYPES = {
     size: 1.15,
     color: "#2f4f4f",
     headColor: "#556b2f",
-    reward: 18,
+    reward: 12,
     damage: 2,
   },
   hornet: {
@@ -37,7 +37,7 @@ const INSECT_TYPES = {
     size: 1.1,
     color: "#ff6347",
     headColor: "#ff4500",
-    reward: 20,
+    reward: 14,
     damage: 2,
   },
 };
