@@ -27,6 +27,13 @@ export const dom = {
   get pauseOverlay() {
     return document.getElementById("pause-overlay");
   },
+  get victoryOverlay() {
+    return document.getElementById("victory-overlay");
+  },
+  victoryTitle: document.getElementById("victory-title"),
+  victoryDetail: document.getElementById("victory-detail"),
+  victoryMenuBtn: document.getElementById("victory-menu"),
+  victoryNextBtn: document.getElementById("victory-next"),
 };
 
 export function updateStats(state) {
@@ -41,13 +48,37 @@ export function updateStats(state) {
 
 export function updateButtonStates(state) {
   const isRunning = state.state === "running" && !state.isPaused;
-  dom.startBtn.style.display = isRunning ? "none" : "flex";
+  const isVictory = state.state === "victory";
+  dom.startBtn.style.display = isRunning || isVictory ? "none" : "flex";
   dom.pauseBtn.style.display = isRunning ? "flex" : "none";
 
   // Show pause overlay when paused
   const isPaused = state.state === "running" && state.isPaused;
   if (dom.pauseOverlay) {
     dom.pauseOverlay.style.display = isPaused ? "flex" : "none";
+  }
+
+  if (dom.victoryOverlay) {
+    dom.victoryOverlay.style.display = isVictory ? "flex" : "none";
+  }
+}
+
+export function updateVictoryOverlay(state) {
+  if (!dom.victoryOverlay) return;
+  const mission = Number(state.mission) || 1;
+  const nextMission = mission < 3 ? String(mission + 1) : null;
+  if (dom.victoryTitle) {
+    dom.victoryTitle.textContent =
+      mission >= 3 ? "Endless Cleared!" : "Mission Cleared";
+  }
+  if (dom.victoryDetail) {
+    dom.victoryDetail.textContent = `You finished wave ${state.wave} on Mission ${state.mission}.`;
+  }
+  if (dom.victoryNextBtn) {
+    dom.victoryNextBtn.disabled = !nextMission;
+    dom.victoryNextBtn.textContent = nextMission
+      ? `Next Mission (${nextMission})`
+      : "Next Mission Unavailable";
   }
 }
 

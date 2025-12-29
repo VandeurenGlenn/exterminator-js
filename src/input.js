@@ -185,3 +185,8 @@ export function setupStartScreenHandlers(dom, handlers) {
     handlers.beginGame();
   });
 }
+
+export function setupVictoryHandlers(dom, handlers) {
+  dom.victoryMenuBtn?.addEventListener("click", () => handlers.goToMenu());
+  dom.victoryNextBtn?.addEventListener("click", () => handlers.nextMission());
+}

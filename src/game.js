@@ -260,7 +260,8 @@ export class Game {
   }
 
   placeTower(pos, type = "standard") {
-    if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.state === "over" || this.state === "victory")
+      return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     const isSniper = type === "sniper";
     const cost = isSniper ? CONFIG.sniperTowerCost : CONFIG.towerCost;
@@ -332,7 +333,8 @@ export class Game {
   }
 
   placeWall(pos) {
-    if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.state === "over" || this.state === "victory")
+      return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     if (this.scrap < CONFIG.wallCost)
       return { ok: false, reason: "Need more scrap" };
@@ -387,7 +389,8 @@ export class Game {
   }
 
   placeTrap(pos) {
-    if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.state === "over" || this.state === "victory")
+      return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     if (this.scrap < CONFIG.trapCost)
       return { ok: false, reason: "Need more scrap" };
@@ -418,7 +421,8 @@ export class Game {
   }
 
   upgradeAt(pos) {
-    if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.state === "over" || this.state === "victory")
+      return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (!tower) return { ok: false, reason: "No tower here" };
@@ -460,7 +464,8 @@ export class Game {
   }
 
   sellAt(pos) {
-    if (this.state === "over") return { ok: false, reason: "Game over" };
+    if (this.state === "over" || this.state === "victory")
+      return { ok: false, reason: "Game over" };
     if (this.isPaused) return { ok: false, reason: "Game paused" };
     const tower = this.findTowerAt(pos);
     if (tower) {
@@ -916,7 +921,7 @@ export class Game {
     this.drawWalls();
     this.drawEntities();
     this.drawCursor();
-    if (this.state === "over") this.drawGameOver();
+    if (this.state === "over" || this.state === "victory") this.drawGameOver();
   }
 
   drawGrid() {
@@ -1338,7 +1343,13 @@ export class Game {
   }
 
   drawCursor() {
-    if (!this.cursorPos || this.state === "over" || !this.buildMode) return;
+    if (
+      !this.cursorPos ||
+      this.state === "over" ||
+      this.state === "victory" ||
+      !this.buildMode
+    )
+      return;
     const { ctx } = this;
     const valid = this.isBuildable(this.cursorPos);
     ctx.fillStyle = valid ? "rgba(45,212,191,0.18)" : "rgba(255,77,109,0.14)";
@@ -1363,19 +1374,21 @@ export class Game {
 
   drawGameOver() {
     const { ctx } = this;
-    ctx.fillStyle = "rgba(0,0,0,0.5)";
-    ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
-    ctx.fillStyle = "#e9eef5";
-    ctx.textAlign = "center";
-    ctx.font = "32px Manrope, sans-serif";
-    ctx.fillText("Base overrun", CONFIG.width / 2, CONFIG.height / 2 - 10);
-    ctx.font = "18px Manrope, sans-serif";
-    ctx.fillText(
-      "Press Restart to try again",
-      CONFIG.width / 2,
-      CONFIG.height / 2 + 18
-    );
-    ctx.textAlign = "left";
+    if (this.state === "over") {
+      ctx.fillStyle = "rgba(0,0,0,0.5)";
+      ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+      ctx.fillStyle = "#e9eef5";
+      ctx.textAlign = "center";
+      ctx.font = "32px Manrope, sans-serif";
+      ctx.fillText("Base overrun", CONFIG.width / 2, CONFIG.height / 2 - 10);
+      ctx.font = "18px Manrope, sans-serif";
+      ctx.fillText(
+        "Press Restart to try again",
+        CONFIG.width / 2,
+        CONFIG.height / 2 + 18
+      );
+      ctx.textAlign = "left";
+    }
   }
 }
 

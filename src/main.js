@@ -3,6 +3,7 @@ import {
   dom,
   updateStats,
   updateButtonStates,
+  updateVictoryOverlay,
   setTabActive,
   setBuildButtonActive,
   setDifficultyButtonActive,
@@ -16,6 +17,7 @@ import {
   setupTabHandlers,
   setupGameControlHandlers,
   setupStartScreenHandlers,
+  setupVictoryHandlers,
 } from "./input.js";
 import { audio } from "./audio.js";
 
@@ -47,6 +49,7 @@ document.addEventListener("touchstart", resumeAudioContext);
 function onGameStateChange(state) {
   updateStats(state);
   updateButtonStates(state);
+  updateVictoryOverlay(state);
 }
 
 // Input handlers
@@ -175,6 +178,30 @@ const handlers = {
     dom.startScreen.classList.add("hidden");
   },
 
+  goToMenu() {
+    game.reset();
+    audio.startMusic();
+    dom.startScreen.classList.remove("hidden");
+    gameState.setMode(null);
+    gameState.setTab("build");
+    setTabActive("build");
+    setBuildButtonActive(null);
+  },
+
+  nextMission() {
+    const current = Number(game.mission) || 1;
+    const next = current < 3 ? String(current + 1) : null;
+    if (!next) {
+      this.goToMenu();
+      return;
+    }
+    gameState.setMission(next);
+    setMissionButtonActive(next);
+    dom.startScreen.classList.add("hidden");
+    game.setMission(next);
+    game.restart();
+  },
+
   getCurrentMode() {
     return gameState.currentMode;
   },
@@ -187,6 +214,8 @@ setupTabHandlers(dom, handlers);
 setupInputHandlers(game, handlers);
 setupCanvasHandlers(dom.canvas, game, handlers);
 setupStartScreenHandlers(dom, handlers);
+setupVictoryHandlers(dom, handlers);
+setupVictoryHandlers(dom, handlers);
 
 // Initialize UI
 setBuildButtonActive(gameState.currentMode);
